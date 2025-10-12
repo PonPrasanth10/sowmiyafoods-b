@@ -13,9 +13,21 @@ import OrderRoutes from "./routes/OrderRoutes.js"
 const app = express();
 dotenv.config();
 
+const allowedOrigins = [
+  "https://sowmiyafoods.com",
+  "https://www.sowmiyafoods.com",
+  "http://localhost:5173", // optional for local dev
+];
+
 app.use(
   cors({
-    origin: ['https://sowmiyafoods.com', 'https://www.sowmiyafoods.com'],
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("CORS not allowed for this origin: " + origin));
+      }
+    },
     credentials: true,
   })
 );
