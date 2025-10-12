@@ -15,10 +15,11 @@ dotenv.config();
 
 app.use(
   cors({
-    origin: ['https://www.sowmiyafoods.com/'],
+    origin: ['https://sowmiyafoods.com', 'https://www.sowmiyafoods.com'],
     credentials: true,
   })
 );
+
 app.use(express.json());
 
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/rsfoods";
