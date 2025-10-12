@@ -13,7 +13,12 @@ import OrderRoutes from "./routes/OrderRoutes.js"
 const app = express();
 dotenv.config();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: ['https://www.sowmiyafoods.com/'],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/rsfoods";
