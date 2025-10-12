@@ -1,0 +1,111 @@
+import express from "express";
+import Cart from "../models/Cart.js";
+import { protect } from "../middleware/authMiddleware.js";
+
+const router = express.Router();
+
+// =====================
+// Get cart for a user
+// =====================
+router.get("/:userId", protect, async (req, res) => {
+  try {
+    const cart = await Cart.findOne({ userId: req.params.userId }).populate(
+      "products.productId"
+    );
+
+    res.status(200).json(cart || { userId: req.params.userId, products: [] });
+  } catch (err) {
+    console.error("Fetch cart error:", err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// =====================
+// Add product to cart
+// =====================
+router.post("/:userId", protect, async (req, res) => {
+  try {
+    const { productId, quantity } = req.body;
+    if (!productId) return res.status(400).json({ message: "Product ID is required" });
+
+    const qty = Number(quantity) || 1;
+
+    let cart = await Cart.findOne({ userId: req.params.userId });
+
+    if (cart) {
+      const productIndex = cart.products.findIndex(
+        (p) => String(p.productId) === String(productId)
+      );
+
+      if (productIndex > -1) {
+        cart.products[productIndex].quantity += qty;
+      } else {
+        cart.products.push({ productId, quantity: qty });
+      }
+
+      await cart.save();
+    } else {
+      cart = await Cart.create({
+        userId: req.params.userId,
+        products: [{ productId, quantity: qty }],
+      });
+    }
+
+    const populatedCart = await cart.populate("products.productId");
+    res.status(200).json(populatedCart);
+  } catch (err) {
+    console.error("Add to cart error:", err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// =====================
+// Remove product from cart
+// =====================
+router.delete("/:userId/:productId", protect, async (req, res) => {
+  try {
+    const cart = await Cart.findOne({ userId: req.params.userId });
+    if (!cart) return res.status(404).json({ message: "Cart not found" });
+
+    cart.products = cart.products.filter(
+      (p) => String(p.productId) !== String(req.params.productId)
+    );
+
+    await cart.save();
+    const populatedCart = await cart.populate("products.productId");
+    res.status(200).json(populatedCart);
+  } catch (err) {
+    console.error("Remove from cart error:", err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// =====================
+// Update quantity of a product
+// =====================
+router.put("/:userId/:productId", protect, async (req, res) => {
+  try {
+    const { quantity } = req.body;
+    if (!quantity || quantity < 1) return res.status(400).json({ message: "Invalid quantity" });
+
+    const cart = await Cart.findOne({ userId: req.params.userId });
+    if (!cart) return res.status(404).json({ message: "Cart not found" });
+
+    const productIndex = cart.products.findIndex(
+      (p) => String(p.productId) === String(req.params.productId)
+    );
+
+    if (productIndex > -1) {
+      cart.products[productIndex].quantity = Number(quantity);
+      await cart.save();
+    }
+
+    const populatedCart = await cart.populate("products.productId");
+    res.status(200).json(populatedCart);
+  } catch (err) {
+    console.error("Update cart quantity error:", err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+export default router;
