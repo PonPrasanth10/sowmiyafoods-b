@@ -9,6 +9,7 @@ import authRoutes from "./routes/authRoutes.js";
 import contactRoutes from "./routes/ContactRoutes.js"
 import WishlistRoutes from "./routes/WishlistRoutes.js"
 import OrderRoutes from "./routes/OrderRoutes.js"
+import AddressRoutes from './routes/AddressRoutes.js'
 
 const app = express();
 dotenv.config();
@@ -16,7 +17,8 @@ dotenv.config();
 const allowedOrigins = [
   "https://sowmiyafoods.com",
   "https://www.sowmiyafoods.com",
-  "http://localhost:5173", // optional for local dev
+  "http://localhost:5173",
+  "http://localhost:5173/", // optional for local dev
 ];
 
 app.use(
@@ -46,6 +48,7 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/wishlist", WishlistRoutes);
 app.use("/api/orders", OrderRoutes);
+app.use("/api/address", AddressRoutes);
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
