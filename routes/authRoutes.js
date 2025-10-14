@@ -7,12 +7,12 @@ import { protectAdmin } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// ✅ User Signup Route
+// ✅ User Signup
 router.post("/signup", async (req, res) => {
   try {
-    const { name, email, password, isAdmin } = req.body;
+    const { name, password, isAdmin } = req.body;
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ name });
     if (existingUser)
       return res.status(400).json({ message: "User already exists" });
 
@@ -20,7 +20,6 @@ router.post("/signup", async (req, res) => {
 
     const newUser = new User({
       name,
-      email,
       password: hashedPassword,
       isAdmin: isAdmin || false,
     });
@@ -28,14 +27,18 @@ router.post("/signup", async (req, res) => {
     await newUser.save();
 
     const token = jwt.sign(
-      { id: newUser._id, email: newUser.email, isAdmin: newUser.isAdmin },
+      { id: newUser._id, name: newUser.name, isAdmin: newUser.isAdmin },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
 
     res.status(201).json({
       message: "User registered successfully",
-      user: { id: newUser._id, name: newUser.name, email: newUser.email, isAdmin: newUser.isAdmin },
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        isAdmin: newUser.isAdmin,
+      },
       token,
     });
   } catch (error) {
@@ -44,12 +47,12 @@ router.post("/signup", async (req, res) => {
   }
 });
 
-// Login Route (using name)
+// ✅ Login Route (using name)
 router.post("/login", async (req, res) => {
   try {
     const { name, password, isAdminLogin } = req.body;
 
-    const user = await User.findOne({ name }); // ✅ changed from email
+    const user = await User.findOne({ name });
     if (!user)
       return res.status(400).json({ message: "Invalid name or password" });
 
@@ -77,44 +80,6 @@ router.post("/login", async (req, res) => {
   }
 });
 
-
-// ✅ Admin-only Signup Route
-router.post("/signup", protectAdmin, async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
-
-    const existingUser = await User.findOne({ email });
-    if (existingUser)
-      return res.status(400).json({ message: "User already exists" });
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newAdmin = new User({
-      name,
-      email,
-      password: hashedPassword,
-      isAdmin: true,
-    });
-
-    await newAdmin.save();
-
-    const token = jwt.sign(
-      { id: newAdmin._id, email: newAdmin.email, isAdmin: true },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
-
-    res.status(201).json({
-      message: "Admin registered successfully",
-      user: { id: newAdmin._id, name: newAdmin.name, email: newAdmin.email, isAdmin: true },
-      token,
-    });
-  } catch (error) {
-    console.error("Admin Signup Error:", error);
-    res.status(500).json({ message: "Server error during admin signup" });
-  }
-});
-
 // ✅ Fetch all users with addresses (admin only)
 router.get("/admin/users", protectAdmin, async (req, res) => {
   try {
@@ -134,15 +99,12 @@ router.get("/admin/users", protectAdmin, async (req, res) => {
   }
 });
 
-// Delete a specific user (admin only)
+// ✅ Delete a user (admin only)
 router.delete("/admin/users/:userId", protectAdmin, async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // Delete user addresses first
     await Address.deleteMany({ userId });
-
-    // Delete user
     await User.findByIdAndDelete(userId);
 
     res.status(200).json({ message: "User and addresses deleted successfully" });
@@ -152,19 +114,17 @@ router.delete("/admin/users/:userId", protectAdmin, async (req, res) => {
   }
 });
 
-// Delete a specific address (admin only)
+// ✅ Delete address (admin only)
 router.delete("/admin/addresses/:addressId", protectAdmin, async (req, res) => {
   try {
     const { addressId } = req.params;
 
     await Address.findByIdAndDelete(addressId);
-
     res.status(200).json({ message: "Address deleted successfully" });
   } catch (err) {
     console.error("Error deleting address:", err);
     res.status(500).json({ message: "Server error deleting address" });
   }
 });
-
 
 export default router;
