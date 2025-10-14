@@ -44,31 +44,31 @@ router.post("/signup", async (req, res) => {
   }
 });
 
-// ✅ Login Route (handles both admin and normal users)
+// Login Route (using name)
 router.post("/login", async (req, res) => {
   try {
-    const { email, password, isAdminLogin } = req.body;
+    const { name, password, isAdminLogin } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ name }); // ✅ changed from email
     if (!user)
-      return res.status(400).json({ message: "Invalid email or password" });
+      return res.status(400).json({ message: "Invalid name or password" });
 
     if (isAdminLogin && !user.isAdmin)
       return res.status(403).json({ message: "Access denied. Not an admin." });
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
-      return res.status(400).json({ message: "Invalid email or password" });
+      return res.status(400).json({ message: "Invalid name or password" });
 
     const token = jwt.sign(
-      { id: user._id, email: user.email, isAdmin: user.isAdmin },
+      { id: user._id, name: user.name, isAdmin: user.isAdmin },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
 
     res.status(200).json({
       message: "Login successful",
-      user: { id: user._id, name: user.name, email: user.email, isAdmin: user.isAdmin },
+      user: { id: user._id, name: user.name, isAdmin: user.isAdmin },
       token,
     });
   } catch (error) {
@@ -76,6 +76,7 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ message: "Server error during login" });
   }
 });
+
 
 // ✅ Admin-only Signup Route
 router.post("/signup", protectAdmin, async (req, res) => {
