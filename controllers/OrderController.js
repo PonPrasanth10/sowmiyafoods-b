@@ -16,7 +16,7 @@ export const createOrder = async (req, res) => {
       address,
     } = req.body;
 
-    // Save order in database
+    // 1️⃣ Create the order in the database first
     const order = await Order.create({
       userId,
       products,
@@ -27,9 +27,12 @@ export const createOrder = async (req, res) => {
       address,
     });
 
-    // ✅ Send order details to admin only
-    await sendOrderEmailToAdmin({ order, address });
+    // 2️⃣ Send order email to admin asynchronously (non-blocking)
+    sendOrderEmailToAdmin({ order, address }).catch((err) =>
+      console.error("Failed to send admin email:", err)
+    );
 
+    // 3️⃣ Respond to client immediately
     res.status(201).json(order);
   } catch (err) {
     console.error("Order creation failed:", err);
@@ -81,7 +84,9 @@ export const sendOrderEmailToAdmin = async ({ order, address }) => {
       <p><strong>Total Amount:</strong> ₹${order.totalAmount}</p>
       <h3>Delivery Address:</h3>
       <p>${address.fullName}, ${address.phone}</p>
-      <p>${address.address}, ${address.city}, ${address.state} - ${address.pincode}</p>
+      <p>${address.address}, ${address.city}, ${address.state} - ${
+      address.pincode
+    }</p>
       <h3>Products:</h3>
       <ul>
         ${order.products
