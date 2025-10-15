@@ -102,3 +102,15 @@ export const sendOrderEmailToAdmin = async ({ order, address }) => {
     console.error("Failed to send order email to admin:", err);
   }
 };
+// =======================
+// Get all orders (Admin only)
+// =======================
+export const getAllOrders = async (req, res) => {
+  try {
+    const orders = await Order.find().sort({ date: -1 });
+    res.status(200).json(orders);
+  } catch (err) {
+    console.error("Fetching all orders failed:", err);
+    res.status(500).json({ message: "Failed to fetch all orders" });
+  }
+};

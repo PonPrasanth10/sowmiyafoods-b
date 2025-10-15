@@ -1,12 +1,15 @@
 import express from "express";
-import { createOrder, getOrdersByUser } from "../controllers/OrderController.js";
+import { createOrder, getOrdersByUser, getAllOrders } from "../controllers/OrderController.js";
 
 const router = express.Router();
 
-// Save order after successful payment
+// Save order
 router.post("/", createOrder);
 
-// Get all orders of a specific user
+// Get all orders (Admin)
+router.get("/admin/all", getAllOrders);
+
+// Get orders by specific user
 router.get("/:userId", getOrdersByUser);
 
 export default router;

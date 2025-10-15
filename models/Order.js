@@ -12,9 +12,18 @@ const orderSchema = new mongoose.Schema({
     },
   ],
   totalAmount: { type: Number, required: true },
+  deliveryCharge: { type: Number, default: 0 },
   paymentId: { type: String, required: true },
   orderId: { type: String, required: true },
   status: { type: String, default: "paid" },
+  address: {
+    fullName: String,
+    phone: String,
+    address: String,
+    city: String,
+    state: String,
+    pincode: String,
+  },
   date: { type: Date, default: Date.now },
 });
 
