@@ -1,5 +1,5 @@
 import express from "express";
-import { createOrder, getOrdersByUser, getAllOrders } from "../controllers/OrderController.js";
+import { createOrder, getOrdersByUser, getAllOrders, deleteOrder } from "../controllers/OrderController.js";
 
 const router = express.Router();
 
@@ -11,5 +11,6 @@ router.get("/admin/all", getAllOrders);
 
 // Get orders by specific user
 router.get("/:userId", getOrdersByUser);
+router.delete("/admin/:id",deleteOrder);
 
 export default router;
