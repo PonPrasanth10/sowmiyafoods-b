@@ -26,7 +26,8 @@ router.get("/:userId", protect, async (req, res) => {
 router.post("/:userId", protect, async (req, res) => {
   try {
     const { productId, quantity } = req.body;
-    if (!productId) return res.status(400).json({ message: "Product ID is required" });
+    if (!productId)
+      return res.status(400).json({ message: "Product ID is required" });
 
     const qty = Number(quantity) || 1;
 
@@ -62,18 +63,22 @@ router.post("/:userId", protect, async (req, res) => {
 // =====================
 // Remove product from cart
 // =====================
+// =====================
+// Remove product from cart (Fixed)
+// =====================
 router.delete("/:userId/:productId", protect, async (req, res) => {
   try {
-    const cart = await Cart.findOne({ userId: req.params.userId });
-    if (!cart) return res.status(404).json({ message: "Cart not found" });
+    // Use MongoDB $pull to directly remove the item in one operation
+    const updatedCart = await Cart.findOneAndUpdate(
+      { userId: req.params.userId },
+      { $pull: { products: { productId: req.params.productId } } },
+      { new: true } // return the updated document
+    ).populate("products.productId");
 
-    cart.products = cart.products.filter(
-      (p) => String(p.productId) !== String(req.params.productId)
-    );
+    if (!updatedCart)
+      return res.status(404).json({ message: "Cart not found" });
 
-    await cart.save();
-    const populatedCart = await cart.populate("products.productId");
-    res.status(200).json(populatedCart);
+    res.status(200).json(updatedCart);
   } catch (err) {
     console.error("Remove from cart error:", err);
     res.status(500).json({ message: err.message });
@@ -86,7 +91,8 @@ router.delete("/:userId/:productId", protect, async (req, res) => {
 router.put("/:userId/:productId", protect, async (req, res) => {
   try {
     const { quantity } = req.body;
-    if (!quantity || quantity < 1) return res.status(400).json({ message: "Invalid quantity" });
+    if (!quantity || quantity < 1)
+      return res.status(400).json({ message: "Invalid quantity" });
 
     const cart = await Cart.findOne({ userId: req.params.userId });
     if (!cart) return res.status(404).json({ message: "Cart not found" });
