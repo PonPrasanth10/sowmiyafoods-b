@@ -19,6 +19,7 @@ dotenv.config();
 const allowedOrigins = [
   "https://sowmiyafoods.com",
   "https://www.sowmiyafoods.com",
+  "https://sowmiyafoods.vercel.app",
   "http://localhost:5173",
   "http://localhost:5173/",
 ];
